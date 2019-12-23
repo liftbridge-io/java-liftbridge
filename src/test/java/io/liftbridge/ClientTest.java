@@ -92,7 +92,11 @@ public class ClientTest {
     }
 
     @Test
-    public void testSubscribe() {
-
+    public void testSubscribeDefaultOptions() {
+        client.createStream(streamName, new StreamOptions());
+        client.subscribe(streamName, new MessageHandler(){
+                public void onMessage(io.liftbridge.Message msg){}
+                public void onError(Throwable t){}
+            }, new SubscriptionOptions());
     }
 }

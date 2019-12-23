@@ -1,10 +1,12 @@
 package io.liftbridge;
 
 import io.grpc.ManagedChannel;
+import io.grpc.stub.StreamObserver;
 import io.liftbridge.MessageHandler;
 import io.liftbridge.proto.APIGrpc.APIStub;
 import io.liftbridge.proto.APIGrpc.APIBlockingStub;
 import io.liftbridge.proto.APIGrpc;
+import io.liftbridge.proto.Api;
 
 public class Client {
     private APIStub asyncStub;
@@ -33,7 +35,15 @@ public class Client {
     /**
      * Subscribes to a stream.
      */
-    public void subscribe(String streamName, SubscriptionOptions opts) {
-
+    public void subscribe(String streamName, MessageHandler msgHandler, SubscriptionOptions opts) {
+        asyncStub.subscribe(opts.asRequest(), new StreamObserver<Api.Message>() {
+                public void onNext(Api.Message message) {
+                    msgHandler.onMessage(io.liftbridge.Message.fromWire(message));
+                }
+                public void onError(Throwable t) {
+                    msgHandler.onError(t);
+                }
+                public void onCompleted() {}
+            });
     }
 }
