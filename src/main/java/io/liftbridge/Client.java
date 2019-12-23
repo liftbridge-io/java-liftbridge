@@ -29,7 +29,7 @@ public class Client {
     /**
      * Creates a stream. Will block until response is received.
      */
-    public void createStream(String streamName, CreateStreamOptions opts) {
+    public void createStream(String streamName, StreamOptions opts) {
         CreateStreamRequest req = opts.asRequest(streamName);
         blockingStub.createStream(req);
     }
@@ -41,10 +41,10 @@ public class Client {
 
     }
 
-    public static final class CreateStreamOptions {
+    public static final class StreamOptions {
         private CreateStreamRequest.Builder requestBuilder;
 
-        public CreateStreamOptions() {
+        public StreamOptions() {
             requestBuilder = CreateStreamRequest.newBuilder();
         }
 
@@ -55,7 +55,7 @@ public class Client {
 			return requestBuilder.getSubject();
 		}
 
-		public CreateStreamOptions setSubject(String subject) {
+		public StreamOptions setSubject(String subject) {
             requestBuilder.setSubject(subject);
             return this;
         }
@@ -67,7 +67,7 @@ public class Client {
 			return requestBuilder.getReplicationFactor();
 		}
 
-		public CreateStreamOptions setReplicationFactor(Integer replicationFactor) {
+		public StreamOptions setReplicationFactor(Integer replicationFactor) {
             requestBuilder = requestBuilder.setReplicationFactor(replicationFactor);
             return this;
         }
@@ -82,7 +82,7 @@ public class Client {
 		/**
 		 * @param group the group to set
 		 */
-		public CreateStreamOptions setGroup(String group) {
+		public StreamOptions setGroup(String group) {
 			requestBuilder = requestBuilder.setGroup(group);
             return this;
 		}
@@ -97,7 +97,7 @@ public class Client {
 		/**
 		 * @param partitions the partitions to set
 		 */
-		public CreateStreamOptions setPartitions(Integer partitions) {
+		public StreamOptions setPartitions(Integer partitions) {
 			requestBuilder = requestBuilder.setPartitions(partitions);
             return this;
 		}
