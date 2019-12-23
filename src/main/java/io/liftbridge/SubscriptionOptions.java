@@ -63,24 +63,24 @@ public class SubscriptionOptions {
     }
 
     public abstract class StartPosition {
-        protected abstract SubscribeRequest.Builder setRequestBuilderParameters(SubscribeRequest.Builder builder);
+        abstract SubscribeRequest.Builder setRequestBuilderParameters(SubscribeRequest.Builder builder);
     }
 
     public class StartAtNewOnly extends StartPosition {
         StartAtNewOnly() {}
-        protected SubscribeRequest.Builder setRequestBuilderParameters(SubscribeRequest.Builder builder) {
+        SubscribeRequest.Builder setRequestBuilderParameters(SubscribeRequest.Builder builder) {
             return builder.setStartPosition(Api.StartPosition.NEW_ONLY);
         }
     }
 
     public class StartAtEarliestReceived extends StartPosition {
-        protected SubscribeRequest.Builder setRequestBuilderParameters(SubscribeRequest.Builder builder) {
+        SubscribeRequest.Builder setRequestBuilderParameters(SubscribeRequest.Builder builder) {
             return builder.setStartPosition(Api.StartPosition.EARLIEST);
         }
     }
 
     public class StartAtLatestReceived extends StartPosition {
-        protected SubscribeRequest.Builder setRequestBuilderParameters(SubscribeRequest.Builder builder) {
+        SubscribeRequest.Builder setRequestBuilderParameters(SubscribeRequest.Builder builder) {
             return builder.setStartPosition(Api.StartPosition.LATEST);
         }
     }
@@ -92,7 +92,7 @@ public class SubscriptionOptions {
             this.offset = offset;
         }
 
-        protected SubscribeRequest.Builder setRequestBuilderParameters(SubscribeRequest.Builder builder) {
+        SubscribeRequest.Builder setRequestBuilderParameters(SubscribeRequest.Builder builder) {
             return builder.setStartPosition(Api.StartPosition.OFFSET).setStartOffset(offset);
         }
     }
@@ -104,7 +104,7 @@ public class SubscriptionOptions {
             this.timestampNanoSeconds = timestampNanoSeconds;
         }
 
-        protected SubscribeRequest.Builder setRequestBuilderParameters(SubscribeRequest.Builder builder) {
+        SubscribeRequest.Builder setRequestBuilderParameters(SubscribeRequest.Builder builder) {
             return builder.setStartPosition(Api.StartPosition.TIMESTAMP)
                 .setStartTimestamp(this.timestampNanoSeconds);
         }
