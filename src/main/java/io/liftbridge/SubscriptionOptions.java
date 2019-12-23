@@ -29,7 +29,7 @@ public class SubscriptionOptions {
         return messageHandler;
     }
 
-    public String getStreamName() {
+    String getStreamName() {
         return requestBuilder.getStream();
     }
 
@@ -47,7 +47,7 @@ public class SubscriptionOptions {
         return this;
     }
 
-    public SubscriptionOptions setStreamName(String streamName) {
+    SubscriptionOptions setStreamName(String streamName) {
         requestBuilder.setStream(streamName);
         return this;
     }
@@ -62,30 +62,30 @@ public class SubscriptionOptions {
         return requestBuilder.build();
     }
 
-    public abstract class StartPosition {
+    public abstract static class StartPosition {
         abstract SubscribeRequest.Builder setRequestBuilderParameters(SubscribeRequest.Builder builder);
     }
 
-    public class StartAtNewOnly extends StartPosition {
+    public static class StartAtNewOnly extends StartPosition {
         StartAtNewOnly() {}
         SubscribeRequest.Builder setRequestBuilderParameters(SubscribeRequest.Builder builder) {
             return builder.setStartPosition(Api.StartPosition.NEW_ONLY);
         }
     }
 
-    public class StartAtEarliestReceived extends StartPosition {
+    public static class StartAtEarliestReceived extends StartPosition {
         SubscribeRequest.Builder setRequestBuilderParameters(SubscribeRequest.Builder builder) {
             return builder.setStartPosition(Api.StartPosition.EARLIEST);
         }
     }
 
-    public class StartAtLatestReceived extends StartPosition {
+    public static class StartAtLatestReceived extends StartPosition {
         SubscribeRequest.Builder setRequestBuilderParameters(SubscribeRequest.Builder builder) {
             return builder.setStartPosition(Api.StartPosition.LATEST);
         }
     }
 
-    public class StartAtOffset extends StartPosition {
+    public static class StartAtOffset extends StartPosition {
         private Long offset;
 
         StartAtOffset(Long offset) {
@@ -97,7 +97,7 @@ public class SubscriptionOptions {
         }
     }
 
-    public class StartAtTimestamp extends StartPosition {
+    public static class StartAtTimestamp extends StartPosition {
         private Long timestampNanoSeconds;
 
         StartAtTimestamp(Long timestampNanoSeconds) {
