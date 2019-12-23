@@ -58,11 +58,18 @@ dependencies {
 
     testImplementation "junit:junit:4.12"
     testImplementation "io.grpc:grpc-netty:1.26.0"
+    testImplementation "org.apache.commons:commons-lang3:3.9"
 }
 
 jar {
     manifest {
         attributes("Implementation-Title": project.name,
                    "Implementation-Version": project.version)
+    }
+}
+
+test {
+    testLogging {
+        showStandardStreams = true
     }
 }

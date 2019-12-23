@@ -55,8 +55,9 @@ public class Client {
 			return create_stream_req_builder.getSubject();
 		}
 
-		public void setSubject(String subject) {
+		public CreateStreamOptions setSubject(String subject) {
             create_stream_req_builder.setSubject(subject);
+            return this;
         }
 
         /**
@@ -66,8 +67,9 @@ public class Client {
 			return create_stream_req_builder.getReplicationFactor();
 		}
 
-		public void setReplicationFactor(Integer replicationFactor) {
+		public CreateStreamOptions setReplicationFactor(Integer replicationFactor) {
             create_stream_req_builder.setReplicationFactor(replicationFactor);
+            return this;
         }
 
 		/**
@@ -80,8 +82,9 @@ public class Client {
 		/**
 		 * @param group the group to set
 		 */
-		public void setGroup(String group) {
+		public CreateStreamOptions setGroup(String group) {
 			create_stream_req_builder.setGroup(group);
+            return this;
 		}
 
 		/**
@@ -94,12 +97,17 @@ public class Client {
 		/**
 		 * @param partitions the partitions to set
 		 */
-		public void setPartitions(Integer partitions) {
+		public CreateStreamOptions setPartitions(Integer partitions) {
 			create_stream_req_builder.setPartitions(partitions);
+            return this;
 		}
 
         protected CreateStreamRequest asRequest(String stream_name){
-            return create_stream_req_builder.setName(stream_name).build();
+            CreateStreamRequest.Builder req_builder = create_stream_req_builder.setName(stream_name);
+            if(req_builder.getSubject() == null || req_builder.getSubject() == "") {
+                return req_builder.setSubject(stream_name).build();
+            }
+            return req_builder.build();
         }
     }
 
