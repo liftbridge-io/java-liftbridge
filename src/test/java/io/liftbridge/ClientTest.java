@@ -37,7 +37,7 @@ public class ClientTest {
 
     @Before
     public void setupClient() {
-        this.client = io.liftbridge.Client.connect(grpcChannel);
+        this.client = Client.connect(grpcChannel);
     }
 
     @After
@@ -47,37 +47,37 @@ public class ClientTest {
 
     private static ManagedChannel grpcChannel;
     private String streamName;
-    io.liftbridge.Client client;
+    Client client;
 
     // TODO write assertions when a "fetch metadata" method is available
     @Test
     public void testCreateStreamDefaultOptions() {
-        client.createStream(streamName, new io.liftbridge.Client.StreamOptions());
+        client.createStream(streamName, new StreamOptions());
     }
 
     @Test
     public void testCreateStreamWithMorePartitions() {
-        client.createStream(streamName, new io.liftbridge.Client.StreamOptions().setPartitions(3));
+        client.createStream(streamName, new StreamOptions().setPartitions(3));
     }
 
     @Test
     public void testCreateStreamWithGroup(){
-        client.createStream(streamName, new io.liftbridge.Client.StreamOptions().setGroup("grp1"));
+        client.createStream(streamName, new StreamOptions().setGroup("grp1"));
     }
 
     @Test
     public void testCreateStreamWithSubject(){
-        client.createStream(streamName, new io.liftbridge.Client.StreamOptions().setSubject("subj-rand"));
+        client.createStream(streamName, new StreamOptions().setSubject("subj-rand"));
     }
 
     @Test
     public void testCreateStreamWithReplicationFactor(){
-        client.createStream(streamName, new io.liftbridge.Client.StreamOptions().setReplicationFactor(1));
+        client.createStream(streamName, new StreamOptions().setReplicationFactor(1));
     }
 
     @Test
     public void testCreateStreamWithAllOptions(){
-        io.liftbridge.Client.StreamOptions options = new io.liftbridge.Client.StreamOptions()
+        StreamOptions options = new StreamOptions()
             .setPartitions(3)
             .setGroup("grp1")
             .setSubject("subj-rand")
