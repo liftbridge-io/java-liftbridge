@@ -84,4 +84,15 @@ public class ClientTest {
             .setReplicationFactor(1);
         client.createStream(streamName, options);
     }
+
+    @Test(expected = RuntimeException.class)
+    public void testCreateStreamDuplicatedFails(){
+        client.createStream(streamName, new StreamOptions());
+        client.createStream(streamName, new StreamOptions());
+    }
+
+    @Test
+    public void testSubscribe() {
+
+    }
 }
