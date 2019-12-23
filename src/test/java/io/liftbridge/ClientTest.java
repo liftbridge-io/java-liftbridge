@@ -12,11 +12,11 @@ import io.grpc.ManagedChannel;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 
 public class ClientTest {
-    private static final String serverAddress = "localhost";
-    private static final Integer serverPort = 9292;
+    private static final String SERVER_ADDRESS = "localhost";
+    private static final Integer SERVER_PORT = 9292;
 
     private static ManagedChannel grpcConnect() {
-        ManagedChannelBuilder builder = ManagedChannelBuilder.forAddress(serverAddress, serverPort);
+        ManagedChannelBuilder builder = ManagedChannelBuilder.forAddress(SERVER_ADDRESS, SERVER_PORT);
         return builder.usePlaintext().build();
     }
 
