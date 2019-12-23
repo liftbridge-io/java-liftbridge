@@ -7,6 +7,7 @@ import io.liftbridge.proto.APIGrpc.APIStub;
 import io.liftbridge.proto.APIGrpc.APIBlockingStub;
 import io.liftbridge.proto.APIGrpc;
 import io.liftbridge.proto.Api;
+import com.google.protobuf.ByteString;
 
 public class Client {
     private APIStub asyncStub;
@@ -45,5 +46,18 @@ public class Client {
                 }
                 public void onCompleted() {}
             });
+    }
+
+    public void publishToSubject(String subject, byte[] payload) {
+        Api.Message msg = Api.Message.newBuilder()
+            .setSubject(subject)
+            .setValue(ByteString.copyFrom(payload))
+            .build();
+
+        Api.PublishRequest req = Api.PublishRequest.newBuilder()
+            .setMessage(msg)
+            .build();
+
+        blockingStub.publish(req);
     }
 }
