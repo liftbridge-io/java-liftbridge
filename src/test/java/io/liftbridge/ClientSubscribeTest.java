@@ -13,23 +13,23 @@ import java.util.Collections;
 
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 
-// TODO there's not much we can test without publishing
 public class ClientSubscribeTest extends BaseClientTest {
     @Before
-    public void setup() {
-        this.populatedStreamName = randomAlphabetic(10);
+    public void setupStreams() {
+        populatedStreamName = randomAlphabetic(10);
         client.createStream(streamName, new StreamOptions());
-        client.createStream(this.populatedStreamName, new StreamOptions());
+        client.createStream(populatedStreamName, new StreamOptions());
 
         for(Integer i = 0; i < 10; ++i) {
-            ByteBuffer payload = ByteBuffer.allocate(4).putInt(i);
+            byte[] payload = ByteBuffer.allocate(4).putInt(i).array();
             client.publish(this.populatedStreamName,
-                           payload.asReadOnlyBuffer(),
+                           payload,
                            10, MILLISECONDS);
         }
     }
 
-    String populatedStreamName;
+    private String populatedStreamName;
+
     @Test
     public void testSubscribeDefaultOptions() {
         client.subscribe(streamName, new MessageHandler(){
@@ -53,24 +53,34 @@ public class ClientSubscribeTest extends BaseClientTest {
     }
 
     @Test
-    public void testSubscribeFromFirstMessage() {
-        SubscriptionOptions opts = new SubscriptionOptions()
-            .setStartPosition(new SubscriptionOptions.StartAtEarliestReceived());
+    public void testSubscribeFromNewOnly() {
+        SubscriptionOptions opts = new SubscriptionOptions();
         final List<Integer> streamValues = new ArrayList<Integer>();
 
         client.subscribe(populatedStreamName, new MessageHandler(){
                 public void onMessage(io.liftbridge.Message msg){
-                    streamValues.add(msg.getValue().getInt());
+                    try{
+                        streamValues.add(ByteBuffer.wrap(msg.getValue()).getInt());
+                    } catch(java.nio.BufferUnderflowException ex) {
+
+                    }
                 }
-                public void onError(Throwable t){}
+                public void onError(Throwable t){
+                    System.out.println(t.getMessage());
+                    t.printStackTrace();
+                }
             }, opts);
+
+        for(Integer i = 0; i < 10; ++i) {
+            byte[] payload = ByteBuffer.allocate(20).putInt(i + 10).array();
+            client.publish(this.populatedStreamName,
+                           payload, 10, MILLISECONDS);
+        }
         await().atMost(5, SECONDS).until(() -> streamValues.size() >= 10);
-        System.out.println(streamValues.get(0));
-        streamValues.remove(0);
         Collections.sort(streamValues);
         Integer[] vals = new Integer[10];
         assertArrayEquals("All messages were received",
-                          new Integer[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
+                          new Integer[]{10, 11, 12, 13, 14, 15, 16, 17, 18, 19},
                           streamValues.toArray(vals));
     }
 }

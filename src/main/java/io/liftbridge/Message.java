@@ -1,25 +1,24 @@
 package io.liftbridge;
 
 import io.liftbridge.proto.Api;
-import java.nio.ByteBuffer;
 import java.util.HashMap;
 
 public class Message {
     private Long offset;
-    private ByteBuffer key;
-    private ByteBuffer value;
+    private byte[] key;
+    private byte[] value;
     private Long timestampNanos;
     private String subject;
     private String replySubject;
-    private HashMap<String, ByteBuffer> headers;
+    private HashMap<String, byte[]> headers;
 
     Message(){}
 
     static Message fromWire(Api.Message wireMsg) {
         Message msg = new Message();
         msg.setOffset(wireMsg.getOffset());
-        msg.setValue(wireMsg.getValue().asReadOnlyByteBuffer());
-        msg.setKey(wireMsg.getKey().asReadOnlyByteBuffer());
+        msg.setValue(wireMsg.getValue().toByteArray());
+        msg.setKey(wireMsg.getKey().toByteArray());
         msg.setTimestampNanos(wireMsg.getTimestamp());
         msg.setSubject(wireMsg.getSubject());
         msg.setReplySubject(wireMsg.getReply());
@@ -46,25 +45,25 @@ public class Message {
 	/**
 	 * @return the key
 	 */
-	public ByteBuffer getKey() {
+	public byte[] getKey() {
 		return key;
 	}
 	/**
 	 * @param key the key to set
 	 */
-	private void setKey(ByteBuffer key) {
+	private void setKey(byte[] key) {
 		this.key = key;
 	}
 	/**
 	 * @return the value
 	 */
-	public ByteBuffer getValue() {
+	public byte[] getValue() {
 		return value;
 	}
 	/**
 	 * @param value the value to set
 	 */
-	private void setValue(ByteBuffer value) {
+	private void setValue(byte[] value) {
 		this.value = value;
 	}
 	/**
@@ -106,13 +105,13 @@ public class Message {
 	/**
 	 * @return the headers
 	 */
-	public HashMap<String, ByteBuffer> getHeaders() {
+	public HashMap<String, byte[]> getHeaders() {
 		return headers;
 	}
 	/**
 	 * @param headers the headers to set
 	 */
-	private void setHeaders(HashMap<String, ByteBuffer> headers) {
+	private void setHeaders(HashMap<String, byte[]> headers) {
 		this.headers = headers;
 	}
 }
