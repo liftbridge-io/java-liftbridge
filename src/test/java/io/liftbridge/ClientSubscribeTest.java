@@ -41,7 +41,7 @@ public class ClientSubscribeTest extends BaseClientTest {
 
     @Test
     public void testSubscribeNonExistentStream()  {
-        final AtomicReference<Throwable> streamErr = new AtomicReference(null);
+        final AtomicReference<Throwable> streamErr = new AtomicReference<Throwable>(null);
         client.subscribe(randomAlphabetic(15), new MessageHandler(){
                 public void onMessage(io.liftbridge.Message msg){}
                 public void onError(Throwable t){
