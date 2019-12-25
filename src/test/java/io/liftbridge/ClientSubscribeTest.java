@@ -61,9 +61,9 @@ public class ClientSubscribeTest extends BaseClientTest {
 
         client.subscribe(populatedStreamName, new MessageHandler(){
                 public void onMessage(io.liftbridge.Message msg){
-                    try{
+                    if(msg.getValue().length > 0){
                         streamValues.add(ByteBuffer.wrap(msg.getValue()).getInt());
-                    } catch(java.nio.BufferUnderflowException ex) {}
+                    }
                 }
                 public void onError(Throwable t){}
             }, opts);
@@ -104,9 +104,9 @@ public class ClientSubscribeTest extends BaseClientTest {
 
         client.subscribe(populatedStreamName, new MessageHandler(){
                 public void onMessage(io.liftbridge.Message msg){
-                    try{
+                    if(msg.getValue().length > 0) {
                         streamValues.add(ByteBuffer.wrap(msg.getValue()).getInt());
-                    } catch(java.nio.BufferUnderflowException ex) {}
+                    }
                 }
                 public void onError(Throwable t){}
             }, opts);
@@ -122,5 +122,28 @@ public class ClientSubscribeTest extends BaseClientTest {
         assertArrayEquals("All messages were received",
                           new Integer[]{10, 11, 12, 13, 14, 15, 16, 17, 18, 19},
                           streamValues.toArray(vals));
+    }
+
+    @Test
+    public void testSubscribeFromOffset() {
+        SubscriptionOptions opts = new SubscriptionOptions()
+            .setStartPosition(new SubscriptionOptions.StartAtOffset(5L));
+        final List<Long> offsets = new ArrayList<Long>();
+
+        client.subscribe(populatedStreamName, new MessageHandler(){
+                public void onMessage(io.liftbridge.Message msg){
+                    if(msg.getValue().length > 0) {
+                        offsets.add(msg.getOffset());
+                    }
+                }
+                public void onError(Throwable t){}
+            }, opts);
+
+        await().atMost(5, SECONDS).until(() -> offsets.size() >= 5);
+        Collections.sort(offsets);
+        Long[] vals = new Long[5];
+        assertArrayEquals("All offset, starting with 5, were received",
+                          new Long[]{5L, 6L, 7L, 8L, 9L},
+                          offsets.toArray(vals));
     }
 }
