@@ -6,6 +6,7 @@ import static org.junit.Assert.*;
 import static org.awaitility.Awaitility.await;
 import static java.util.concurrent.TimeUnit.*;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.AtomicLong;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.ArrayList;
@@ -53,6 +54,50 @@ public class ClientSubscribeTest extends BaseClientTest {
     }
 
     @Test
+    public void testSubscribeFromBeginning() {
+        SubscriptionOptions opts = new SubscriptionOptions()
+            .setStartPosition(new SubscriptionOptions.StartAtEarliestReceived());
+        final List<Integer> streamValues = new ArrayList<Integer>();
+
+        client.subscribe(populatedStreamName, new MessageHandler(){
+                public void onMessage(io.liftbridge.Message msg){
+                    try{
+                        streamValues.add(ByteBuffer.wrap(msg.getValue()).getInt());
+                    } catch(java.nio.BufferUnderflowException ex) {}
+                }
+                public void onError(Throwable t){}
+            }, opts);
+
+
+        await().atMost(5, SECONDS).until(() -> streamValues.size() >= 10);
+        Collections.sort(streamValues);
+        Integer[] vals = new Integer[10];
+        assertArrayEquals("All messages were received",
+                          new Integer[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
+                          streamValues.toArray(vals));
+    }
+
+    @Test
+    public void testSubscribeFromLatestReceived() {
+        SubscriptionOptions opts = new SubscriptionOptions()
+            .setStartPosition(new SubscriptionOptions.StartAtLatestReceived());
+        final AtomicLong lastOffset = new AtomicLong(-1);
+
+        client.subscribe(populatedStreamName, new MessageHandler(){
+                public void onMessage(io.liftbridge.Message msg){
+                    if(msg.getValue().length > 0) {
+                        lastOffset.set(msg.getOffset());
+                    }
+                }
+                public void onError(Throwable t){}
+            }, opts);
+
+
+        await().atMost(5, SECONDS).until(() -> lastOffset.get() >= 0);
+        assertEquals("Last offset message was received", 9, lastOffset.get());
+    }
+
+    @Test
     public void testSubscribeFromNewOnly() {
         SubscriptionOptions opts = new SubscriptionOptions();
         final List<Integer> streamValues = new ArrayList<Integer>();
@@ -61,14 +106,9 @@ public class ClientSubscribeTest extends BaseClientTest {
                 public void onMessage(io.liftbridge.Message msg){
                     try{
                         streamValues.add(ByteBuffer.wrap(msg.getValue()).getInt());
-                    } catch(java.nio.BufferUnderflowException ex) {
-
-                    }
+                    } catch(java.nio.BufferUnderflowException ex) {}
                 }
-                public void onError(Throwable t){
-                    System.out.println(t.getMessage());
-                    t.printStackTrace();
-                }
+                public void onError(Throwable t){}
             }, opts);
 
         for(Integer i = 0; i < 10; ++i) {
