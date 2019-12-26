@@ -56,7 +56,7 @@ public class Client {
      * Publishes message to a NATS subject
      * This is a temporary method until the publish API is done
      */
-    public void publish(String subject, ByteBuffer payload,
+    public void publish(String subject, byte[] payload,
                         long deadlineDuration, TimeUnit deadlineUnit) {
         Api.Message msg = Api.Message.newBuilder()
             .setSubject(subject)
