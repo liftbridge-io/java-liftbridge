@@ -1,7 +1,6 @@
 package io.liftbridge;
 
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 public class ClientCreateStreamTest extends BaseClientTest {
     // TODO write assertions when a "fetch metadata" method is available
