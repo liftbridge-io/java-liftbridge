@@ -4,7 +4,8 @@ import io.liftbridge.proto.Api.SubscribeRequest;
 import io.liftbridge.proto.Api;
 
 public class SubscriptionOptions {
-    private SubscribeRequest.Builder requestBuilder;
+
+    private final SubscribeRequest.Builder requestBuilder;
     private StartPosition startPosition;
     private MessageHandler messageHandler;
 
@@ -17,7 +18,7 @@ public class SubscriptionOptions {
      * Specifies the stream partition to consume. Defaults to 0.
      */
     public SubscriptionOptions setPartition(int partition) {
-        requestBuilder = requestBuilder.setPartition(partition);
+        requestBuilder.setPartition(partition);
         return this;
     }
 
@@ -29,7 +30,7 @@ public class SubscriptionOptions {
         return messageHandler;
     }
 
-    String getStreamName() {
+    public String getStreamName() {
         return requestBuilder.getStream();
     }
 
@@ -53,7 +54,7 @@ public class SubscriptionOptions {
     }
 
     public SubscriptionOptions setStartPosition(StartPosition position) {
-        requestBuilder = position.setRequestBuilderParameters(requestBuilder);
+        position.setRequestBuilderParameters(requestBuilder);
         this.startPosition = position;
         return this;
     }
@@ -62,12 +63,14 @@ public class SubscriptionOptions {
         return requestBuilder.build();
     }
 
-    public abstract static class StartPosition {
+    abstract static class StartPosition {
         abstract SubscribeRequest.Builder setRequestBuilderParameters(SubscribeRequest.Builder builder);
     }
 
     public static class StartAtNewOnly extends StartPosition {
-        StartAtNewOnly() {}
+        StartAtNewOnly() {
+        }
+
         SubscribeRequest.Builder setRequestBuilderParameters(SubscribeRequest.Builder builder) {
             return builder.setStartPosition(Api.StartPosition.NEW_ONLY);
         }
@@ -106,7 +109,7 @@ public class SubscriptionOptions {
 
         SubscribeRequest.Builder setRequestBuilderParameters(SubscribeRequest.Builder builder) {
             return builder.setStartPosition(Api.StartPosition.TIMESTAMP)
-                .setStartTimestamp(this.timestampNanoSeconds);
+                    .setStartTimestamp(this.timestampNanoSeconds);
         }
     }
 }
