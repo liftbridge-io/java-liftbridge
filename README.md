@@ -21,7 +21,7 @@ This project is under active development and changing rapidly. For basic usage, 
 To run the tests, first start the standalone dev image:
 
 ```
-$ docker run -t -p 4222:4222 -p 9292:9292 -p 8222:8222 -p 6222:6222 liftbridge/standalone-dev:7af5336bf0a0eb6fb06b72e28eb933570a21a9a2
+$ docker run -t -p 4222:4222 -p 9292:9292 -p 8222:8222 -p 6222:6222 liftbridge/standalone-dev:498fd22384057e3bed1ca57cff326c25aa978921
 ```
 
 Then, go to the project's root dir and run `./gradlew test`.
