@@ -8,10 +8,7 @@ import io.liftbridge.proto.APIGrpc.APIBlockingStub;
 import io.liftbridge.proto.APIGrpc;
 import io.liftbridge.proto.Api;
 import com.google.protobuf.ByteString;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.util.Map;
 
 /**
  * {@code Client} is the main API used to communicate with a Liftbridge cluster. Use {@link Builder#build()} to
@@ -44,14 +41,7 @@ public class Client {
     }
 
     /**
-     * Creates a stream. Will block until response is received.
-     */
-    public void createStream(String streamName) {
-        createStream(streamName, new StreamOptions());
-    }
-
-    /**
-     * Subscribes to a stream.
+     * Subscribes to a Liftbridge stream.
      */
     public void subscribe(String streamName, SubscriptionOptions opts, MessageHandler msgHandler) {
         opts = opts.setStreamName(streamName);
@@ -77,74 +67,29 @@ public class Client {
     }
 
     /**
-     * Publishes message to a NATS subject
-     * This is a temporary method until the publish API is done
+     * Publishes message to a Liftbridge stream.
      */
-    public void publish(String subject, byte[] payload,
-                        long deadlineDuration, TimeUnit deadlineUnit) {
-        Api.Message msg = Api.Message.newBuilder()
-                .setSubject(subject)
-                .setValue(ByteString.copyFrom(payload))
-                .setAckPolicy(Api.AckPolicy.LEADER)
-                .build();
+    public void publish(
+        String streamName, byte[] payload, MessageOptions opts) {
+        int partition = opts.getPartitioner().partition(
+            streamName, opts.getKey(), payload, opts);
 
-        Api.PublishRequest req = Api.PublishRequest.newBuilder()
-                .setMessage(msg)
-                .build();
+        Api.PublishRequest.Builder requestBuilder =
+            Api.PublishRequest.newBuilder()
+            .setValue(ByteString.copyFrom(payload))
+            .setStream(streamName)
+            .setPartition(partition)
+            .setKey(ByteString.copyFrom(opts.getKey()));
 
-        blockingStub.withDeadlineAfter(deadlineDuration, deadlineUnit)
-                .publish(req);
-    }
-
-    /**
-     * {@code Builder} is used to configure and construct a {@link Client} instance.
-     */
-    public static class Builder {
-
-        private final List<String> addrs = new ArrayList<>();
-
-        private Builder() {
+        for (Map.Entry<String, byte[]> header : opts.getHeaders().entrySet()) {
+            requestBuilder.putHeaders(
+                header.getKey(), ByteString.copyFrom(header.getValue()));
         }
 
-        /**
-         * Creates a {@link Builder} that will connect to the given broker address.
-         *
-         * @param addr broker address
-         * @return {@code Builder}
-         */
-        public static Builder create(String addr) {
-            Builder builder = new Builder();
-            return builder.withBroker(addr);
-        }
-
-        /**
-         * Adds the given address to the set of broker hosts the client will use when attempting to connect.
-         *
-         * @param addr broker address
-         * @return {@code this} to allow for call chaining
-         */
-        Builder withBroker(String addr) {
-            addrs.add(addr);
-            return this;
-        }
-
-        /**
-         * Creates a configured {@link Client} instance.
-         *
-         * @return {@code Client}
-         */
-        public Client build() {
-            if (addrs.size() == 0) {
-                throw new RuntimeException("no addresses provided");
-            }
-
-            // TODO: Handle multiple addresses.
-            ManagedChannelBuilder channelBuilder = ManagedChannelBuilder.forTarget(addrs.get(0));
-
-            // TODO: Implement TLS.
-            ManagedChannel channel = channelBuilder.usePlaintext().build();
-            return new Client(channel);
-        }
+        blockingStub.withDeadlineAfter(
+            opts.getAckDeadlineDuration(),
+            opts.getAckDeadlineTimeUnit())
+            .publish(requestBuilder.build());
     }
 
 }

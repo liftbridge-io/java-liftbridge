@@ -64,9 +64,9 @@ public class StreamOptions {
         return this;
     }
 
-    CreateStreamRequest asRequest(String streamName) {
+    CreateStreamRequest asRequest(String streamName){
         CreateStreamRequest.Builder reqBuilder = requestBuilder.setName(streamName);
-        if (reqBuilder.getSubject() == null || reqBuilder.getSubject().isEmpty()) {
+        if(reqBuilder.getSubject() == null || reqBuilder.getSubject() == "") {
             return reqBuilder.setSubject(streamName).build();
         }
         return reqBuilder.build();
