@@ -25,3 +25,15 @@ $ docker run -t -p 4222:4222 -p 9292:9292 -p 8222:8222 -p 6222:6222 liftbridge/s
 ```
 
 Then, go to the project's root dir and run `./gradlew test`.
+
+## Feature list
+
+- [X] Create Streams
+- [X] Subscribe to stream / subject
+- [X] Publish to stream
+- [ ] Publish to subject API
+- [ ] Metadata API
+- [ ] Subscribe to partition leader
+- [ ] Partitioner by key
+- [ ] Round-robin partitioner
+

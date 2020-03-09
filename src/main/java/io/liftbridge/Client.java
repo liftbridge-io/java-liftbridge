@@ -7,8 +7,6 @@ import io.liftbridge.proto.APIGrpc.APIStub;
 import io.liftbridge.proto.APIGrpc.APIBlockingStub;
 import io.liftbridge.proto.APIGrpc;
 import io.liftbridge.proto.Api;
-import com.google.protobuf.ByteString;
-import java.util.Map;
 
 /**
  * {@code Client} is the main API used to communicate with a Liftbridge cluster. Use {@link Builder#build()} to
