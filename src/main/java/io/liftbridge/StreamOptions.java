@@ -3,72 +3,61 @@ package io.liftbridge;
 import io.liftbridge.proto.Api.CreateStreamRequest;
 
 public class StreamOptions {
+    private String subject;
+    private int replicationFactor = 1;
+    private String group = "";
+    private int partitions = 1;
 
-    private final CreateStreamRequest.Builder requestBuilder;
+    public StreamOptions() {}
 
-    public StreamOptions() {
-        requestBuilder = CreateStreamRequest.newBuilder();
-    }
-
-    /**
-     * @return the subject
-     */
     public String getSubject() {
-        return requestBuilder.getSubject();
+        return this.subject;
     }
 
     public StreamOptions setSubject(String subject) {
-        requestBuilder.setSubject(subject);
+        this.subject = subject;
         return this;
     }
 
-    /**
-     * @return the replicationFactor
-     */
     public int getReplicationFactor() {
-        return requestBuilder.getReplicationFactor();
+        return this.replicationFactor;
     }
 
     public StreamOptions setReplicationFactor(int replicationFactor) {
-        requestBuilder.setReplicationFactor(replicationFactor);
+        this.replicationFactor = replicationFactor;
         return this;
     }
 
-    /**
-     * @return the group
-     */
     public String getGroup() {
-        return requestBuilder.getGroup();
+        return this.group;
     }
 
-    /**
-     * @param group the group to set
-     */
     public StreamOptions setGroup(String group) {
-        requestBuilder.setGroup(group);
+        this.group = group;
         return this;
     }
 
-    /**
-     * @return the partitions
-     */
     public int getPartitions() {
-        return requestBuilder.getPartitions();
+        return this.partitions;
     }
 
-    /**
-     * @param partitions the partitions to set
-     */
     public StreamOptions setPartitions(int partitions) {
-        requestBuilder.setPartitions(partitions);
+        this.partitions = partitions;
         return this;
     }
 
     CreateStreamRequest asRequest(String streamName){
-        CreateStreamRequest.Builder reqBuilder = requestBuilder.setName(streamName);
+        CreateStreamRequest.Builder reqBuilder =
+            CreateStreamRequest.newBuilder()
+            .setName(streamName)
+            .setReplicationFactor(this.getReplicationFactor())
+            .setGroup(this.getGroup())
+            .setPartitions(this.getPartitions());
+
         if(reqBuilder.getSubject() == null || reqBuilder.getSubject() == "") {
             return reqBuilder.setSubject(streamName).build();
         }
+
         return reqBuilder.build();
     }
 }

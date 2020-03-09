@@ -38,26 +38,27 @@ public class ClientSubscribeTest extends BaseClientTest {
 
     @Test
     public void testSubscribeDefaultOptions() {
-        client.subscribe(streamName, new MessageHandler() {
-            public void onMessage(io.liftbridge.Message msg) {
-            }
-
-            public void onError(Throwable t) {
-            }
-        });
+        client.subscribe(
+            streamName, new SubscriptionOptions(),
+            new MessageHandler(){
+                    public void onMessage(io.liftbridge.Message msg){}
+                    public void onError(Throwable t){}
+                }
+            );
     }
 
     @Test
-    public void testSubscribeNonExistentStream() {
-        final AtomicReference<Throwable> streamErr = new AtomicReference<>(null);
-        client.subscribe(randomAlphabetic(15), new MessageHandler() {
-            public void onMessage(io.liftbridge.Message msg) {
-            }
-
-            public void onError(Throwable t) {
-                streamErr.set(t);
-            }
-        });
+    public void testSubscribeNonExistentStream()  {
+        final AtomicReference<Throwable> streamErr = new AtomicReference<Throwable>(null);
+        client.subscribe(
+            randomAlphabetic(15), new SubscriptionOptions(),
+            new MessageHandler(){
+                    public void onMessage(io.liftbridge.Message msg){}
+                    public void onError(Throwable t){
+                        streamErr.set(t);
+                    }
+                }
+            );
         await().atMost(1, SECONDS).until(() -> streamErr.get() != null);
         assertTrue(streamErr.get() instanceof RuntimeException);
         assertTrue(streamErr.get().getMessage().contains("NOT_FOUND"));
@@ -69,15 +70,17 @@ public class ClientSubscribeTest extends BaseClientTest {
                 .setStartPosition(new SubscriptionOptions.StartAtEarliestReceived());
         final List<Integer> streamValues = new ArrayList<>();
 
-        client.subscribe(populatedStreamName, opts, new MessageHandler() {
-            public void onMessage(io.liftbridge.Message msg) {
-                if (msg.getValue().length > 0) {
-                    streamValues.add(ByteBuffer.wrap(msg.getValue()).getInt());
-                }
-                public void onError(Throwable t){
-                    t.printStackTrace();
-                }
-            }, opts);
+        client.subscribe(populatedStreamName, opts,
+                         new MessageHandler(){
+                             public void onMessage(io.liftbridge.Message msg){
+                                 if(msg.getValue().length > 0){
+                                     streamValues.add(ByteBuffer.wrap(msg.getValue()).getInt());
+                                 }
+                             }
+                             public void onError(Throwable t){
+                                 t.printStackTrace();
+                             }
+                         });
 
 
         await().atMost(5, SECONDS).until(() -> streamValues.size() >= 10);
@@ -94,14 +97,16 @@ public class ClientSubscribeTest extends BaseClientTest {
             .setStartPosition(new SubscriptionOptions.StartAtLatestReceived());
         final AtomicLong lastOffset = new AtomicLong(-1);
 
-        client.subscribe(populatedStreamName, new MessageHandler(){
+        client.subscribe(
+            populatedStreamName, opts,
+            new MessageHandler(){
                 public void onMessage(io.liftbridge.Message msg){
                     if(msg.getValue().length > 0) {
                         lastOffset.set(msg.getOffset());
                     }
                 }
                 public void onError(Throwable t){}
-            }, opts);
+            });
 
 
         await().atMost(5, SECONDS).until(() -> lastOffset.get() >= 0);
@@ -113,14 +118,16 @@ public class ClientSubscribeTest extends BaseClientTest {
         SubscriptionOptions opts = new SubscriptionOptions();
         final List<Integer> streamValues = new ArrayList<Integer>();
 
-        client.subscribe(populatedStreamName, new MessageHandler(){
+        client.subscribe(
+            populatedStreamName, opts,
+            new MessageHandler(){
                 public void onMessage(io.liftbridge.Message msg){
                     if(msg.getValue().length > 0) {
                         streamValues.add(ByteBuffer.wrap(msg.getValue()).getInt());
                     }
                 }
                 public void onError(Throwable t){}
-            }, opts);
+            });
 
         MessageOptions msgOpts = new MessageOptions()
             .setAckDeadlineDuration(10)
@@ -143,14 +150,16 @@ public class ClientSubscribeTest extends BaseClientTest {
             .setStartPosition(new SubscriptionOptions.StartAtOffset(5L));
         final List<Long> offsets = new ArrayList<Long>();
 
-        client.subscribe(populatedStreamName, new MessageHandler(){
+        client.subscribe(
+            populatedStreamName, opts,
+            new MessageHandler(){
                 public void onMessage(io.liftbridge.Message msg){
                     if(msg.getValue().length > 0) {
                         offsets.add(msg.getOffset());
                     }
                 }
                 public void onError(Throwable t){}
-            }, opts);
+            });
 
         await().atMost(5, SECONDS).until(() -> offsets.size() >= 5);
         Collections.sort(offsets);

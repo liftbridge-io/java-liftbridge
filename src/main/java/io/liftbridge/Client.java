@@ -16,19 +16,24 @@ public class Client {
 
     private APIStub asyncStub;
     private APIBlockingStub blockingStub;
-    private ManagedChannel channel;
 
-    private Client(ManagedChannel channel) {
-        this.channel = channel;
-        this.asyncStub = APIGrpc.newStub(channel);
-        this.blockingStub = APIGrpc.newBlockingStub(channel);
+    protected Client(ManagedChannel grpcChannel) {
+        this.asyncStub = APIGrpc.newStub(grpcChannel);
+        this.blockingStub = APIGrpc.newBlockingStub(grpcChannel);
     }
 
     /**
      * Closes the client connection by shutting down the gRPC channel and releasing any resources.
      */
-    public void close() {
-        channel.shutdown();
+    public static Client connect(ManagedChannel grpcChannel) {
+        return new Client(grpcChannel);
+    }
+
+    /**
+     * Creates a stream. Will block until response is received.
+     */
+    public void createStream(String streamName) {
+        createStream(streamName, new StreamOptions());
     }
 
     /**
@@ -41,18 +46,22 @@ public class Client {
     /**
      * Subscribes to a Liftbridge stream.
      */
-    public void subscribe(String streamName, MessageHandler msgHandler,
-                          SubscriptionOptions opts) {
-        asyncStub.subscribe(opts.toWire(streamName),
-                            new StreamObserver<Api.Message>() {
-                public void onNext(Api.Message message) {
-                    msgHandler.onMessage(io.liftbridge.Message.fromWire(message));
+    public void subscribe(String streamName, SubscriptionOptions opts,
+                          MessageHandler msgHandler) {
+        asyncStub.subscribe(
+            opts.toWire(streamName), new StreamObserver<Api.Message>() {
+                    public void onNext(Api.Message message) {
+                        msgHandler.onMessage(
+                            io.liftbridge.Message.fromWire(message));
+                    }
+
+                    public void onError(Throwable t) {
+                        msgHandler.onError(t);
+                    }
+
+                    public void onCompleted() {}
                 }
-                public void onError(Throwable t) {
-                    msgHandler.onError(t);
-                }
-                public void onCompleted() {}
-            });
+            );
     }
 
     /**

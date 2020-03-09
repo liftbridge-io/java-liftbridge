@@ -12,21 +12,8 @@ public class BaseClientTest {
     private static final String SERVER_ADDRESS = "localhost";
     private static final Integer SERVER_PORT = 9292;
 
-    private static ManagedChannel grpcConnect() {
-        ManagedChannelBuilder builder =
-            ManagedChannelBuilder.forAddress(SERVER_ADDRESS, SERVER_PORT);
-        return builder.usePlaintext().build();
-    }
-
-    @BeforeClass
-    public static void setupGrpcChannel() {
-        grpcChannel = grpcConnect();
-    }
-
-    @AfterClass
-    public static void cleanupGrpcChannel() {
-        grpcChannel.shutdown();
-    }
+    String streamName;
+    ManagedChannelClient client;
 
     @Before
     public void setupStreamName() {
@@ -35,7 +22,8 @@ public class BaseClientTest {
 
     @Before
     public void setupClient() {
-        this.client = Client.Builder.create(SERVER_ADDRESS + ":" + SERVER_PORT).build();
+        this.client = ManagedChannelClient.Builder.create(
+            SERVER_ADDRESS + ":" + SERVER_PORT).build();
     }
 
     @After

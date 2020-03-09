@@ -48,52 +48,64 @@ public class Message {
         return msg;
     }
 
-	public Long getOffset() {
-        return offset;
-    }
-
 	private void setOffset(Long offset) {
 		this.offset = offset;
-	}
-
-    public byte[] getKey() {
-		return key;
 	}
 
     private void setKey(byte[] key) {
 		this.key = key;
 	}
 
-    public byte[] getValue() {
-		return value;
-	}
-
     private void setValue(byte[] value) {
 		this.value = value;
-	}
-
-    public Instant getTimestamp() {
-		return timestamp;
 	}
 
     private void setTimestamp(Instant instant) {
         this.timestamp = instant;
 	}
 
-    public String getSubject() {
-		return subject;
-	}
-
     private void setSubject(String subject) {
 		this.subject = subject;
 	}
 
-    public String getReplySubject() {
-		return replySubject;
-	}
-
     private void setReplySubject(String replySubject) {
 		this.replySubject = replySubject;
+	}
+
+    private void setStreamName(String streamName) {
+		this.streamName = streamName;
+	}
+
+    private void setPartition(int partition) {
+		this.partition = partition;
+	}
+
+	private void setCorrelationId(String correlationId) {
+		this.correlationId = correlationId;
+	}
+
+    public Long getOffset() {
+        return offset;
+    }
+
+	public byte[] getKey() {
+		return key;
+	}
+
+    public byte[] getValue() {
+		return value;
+	}
+
+    public Instant getTimestamp() {
+		return timestamp;
+	}
+
+    public String getSubject() {
+		return subject;
+	}
+
+    public String getReplySubject() {
+		return replySubject;
 	}
 
     public Map<String, byte[]> getHeaders() {
@@ -108,23 +120,11 @@ public class Message {
 		return streamName;
 	}
 
-	public void setStreamName(String streamName) {
-		this.streamName = streamName;
-	}
-
 	public int getPartition() {
 		return partition;
 	}
 
-	public void setPartition(int partition) {
-		this.partition = partition;
-	}
-
 	public String getCorrelationId() {
 		return correlationId;
-	}
-
-	public void setCorrelationId(String correlationId) {
-		this.correlationId = correlationId;
 	}
 }
