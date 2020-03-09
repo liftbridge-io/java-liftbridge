@@ -2,14 +2,16 @@ package io.liftbridge;
 
 import io.liftbridge.proto.Api;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class MessageOptions {
     private String ackInbox;
     private String correlationId;
     private AckPolicy ackPolicy = AckPolicy.NONE;
-    private HashMap<String, byte[]> headers;
+    private HashMap<String, byte[]> headers = new HashMap<String, byte[]>();
     private byte[] key;
     private Partitioner partitioner = new ConstantPartitioner();
     private long ackDeadlineDuration;
@@ -25,12 +27,12 @@ public class MessageOptions {
         return this;
 	}
 
-	public HashMap<String, byte[]> getHeaders() {
-		return headers;
+	public Map<String, byte[]> getHeaders() {
+		return Collections.unmodifiableMap(headers);
 	}
 
-	public MessageOptions setHeaders(HashMap<String, byte[]> headers) {
-		this.headers = headers;
+	public MessageOptions putHeader(String key, byte[] value) {
+        this.headers.put(key, value);
         return this;
     }
 

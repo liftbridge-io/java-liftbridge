@@ -17,7 +17,7 @@ public class Message {
     private String streamName;
     private String subject;
     private String replySubject;
-    private HashMap<String, byte[]> headers;
+    private HashMap<String, byte[]> headers = new HashMap<String, byte[]>();
     private String correlationId;
 
     private Message() {

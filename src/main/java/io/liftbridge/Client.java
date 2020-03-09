@@ -43,27 +43,18 @@ public class Client {
     /**
      * Subscribes to a Liftbridge stream.
      */
-    public void subscribe(String streamName, SubscriptionOptions opts, MessageHandler msgHandler) {
-        opts = opts.setStreamName(streamName);
-        asyncStub.subscribe(opts.asRequest(), new StreamObserver<Api.Message>() {
-            public void onNext(Api.Message message) {
-                msgHandler.onMessage(io.liftbridge.Message.fromWire(message));
-            }
-
-            public void onError(Throwable t) {
-                msgHandler.onError(t);
-            }
-
-            public void onCompleted() {
-            }
-        });
-    }
-
-    /**
-     * Subscribes to a stream.
-     */
-    public void subscribe(String streamName, MessageHandler msgHandler) {
-        subscribe(streamName, new SubscriptionOptions(), msgHandler);
+    public void subscribe(String streamName, MessageHandler msgHandler,
+                          SubscriptionOptions opts) {
+        asyncStub.subscribe(opts.toWire(streamName),
+                            new StreamObserver<Api.Message>() {
+                public void onNext(Api.Message message) {
+                    msgHandler.onMessage(io.liftbridge.Message.fromWire(message));
+                }
+                public void onError(Throwable t) {
+                    msgHandler.onError(t);
+                }
+                public void onCompleted() {}
+            });
     }
 
     /**
@@ -71,25 +62,13 @@ public class Client {
      */
     public void publish(
         String streamName, byte[] payload, MessageOptions opts) {
-        int partition = opts.getPartitioner().partition(
-            streamName, opts.getKey(), payload, opts);
-
-        Api.PublishRequest.Builder requestBuilder =
-            Api.PublishRequest.newBuilder()
-            .setValue(ByteString.copyFrom(payload))
-            .setStream(streamName)
-            .setPartition(partition)
-            .setKey(ByteString.copyFrom(opts.getKey()));
-
-        for (Map.Entry<String, byte[]> header : opts.getHeaders().entrySet()) {
-            requestBuilder.putHeaders(
-                header.getKey(), ByteString.copyFrom(header.getValue()));
-        }
+        Api.PublishRequest request = PublishRequest.build(streamName, payload,
+                                                          opts);
 
         blockingStub.withDeadlineAfter(
             opts.getAckDeadlineDuration(),
             opts.getAckDeadlineTimeUnit())
-            .publish(requestBuilder.build());
+            .publish(request);
     }
 
 }
