@@ -2,6 +2,7 @@ plugins {
     id "java-library"
     id "maven-publish"
     id "eclipse"
+    id "com.google.protobuf" version "0.8.8"
 }
 
 group = "io.liftbridge"
@@ -16,7 +17,8 @@ sourceSets {
     main {
         java {
             srcDir "src/main/java"
-            srcDir "src/gen/java"
+            srcDir "build/generated/source/proto/main/java"
+            srcDir "build/generated/source/proto/main/grpc"
         }
     }
 }
@@ -64,7 +66,9 @@ dependencies {
     testImplementation "junit:junit:4.12"
     testImplementation "io.grpc:grpc-netty:1.26.0"
     testImplementation "org.apache.commons:commons-lang3:3.9"
-    testImplementation 'org.awaitility:awaitility:4.0.1'
+    testImplementation "org.awaitility:awaitility:4.0.1"
+
+    protobuf files("liftbridge-api/")
 }
 
 jar {
@@ -84,4 +88,20 @@ test {
 
 tasks.withType(JavaCompile) {
   options.compilerArgs << "-Xlint:unchecked" << "-Werror"
+}
+
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:3.7.0"
+    }
+    plugins {
+        grpc {
+            artifact = "io.grpc:protoc-gen-grpc-java:1.19.0"
+        }
+    }
+    generateProtoTasks {
+        all()*.plugins {
+            grpc {}
+        }
+    }
 }

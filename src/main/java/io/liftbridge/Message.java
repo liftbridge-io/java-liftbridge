@@ -2,126 +2,129 @@ package io.liftbridge;
 
 import io.liftbridge.proto.Api;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
+import java.time.Instant;
+import com.google.protobuf.ByteString;
 
 public class Message {
     private Long offset;
     private byte[] key;
     private byte[] value;
-    private Long timestampNanos;
+    private int partition;
+    private Instant timestamp;
+    private String streamName;
     private String subject;
     private String replySubject;
-    private HashMap<String, byte[]> headers;
+    private HashMap<String, byte[]> headers = new HashMap<String, byte[]>();
+    private String correlationId;
 
     private Message() {
     }
 
     static Message fromWire(Api.Message wireMsg) {
         Message msg = new Message();
+
+        Long tsNanos = wireMsg.getTimestamp();
+
         msg.setOffset(wireMsg.getOffset());
-        msg.setValue(wireMsg.getValue().toByteArray());
         msg.setKey(wireMsg.getKey().toByteArray());
-        msg.setTimestampNanos(wireMsg.getTimestamp());
+        msg.setValue(wireMsg.getValue().toByteArray());
+        msg.setTimestamp(Instant.ofEpochSecond(
+                             tsNanos / 1_000_000_000,
+                             tsNanos % 1_000_000_000));
+        msg.setStreamName(wireMsg.getStream());
+        msg.setPartition(wireMsg.getPartition());
         msg.setSubject(wireMsg.getSubject());
-        msg.setReplySubject(wireMsg.getReply());
+        msg.setReplySubject(wireMsg.getReplySubject());
+        msg.setCorrelationId(wireMsg.getCorrelationId());
+
+        for (Map.Entry<String, ByteString> entry :
+                 wireMsg.getHeadersMap().entrySet()) {
+            msg.putHeader(entry.getKey(), entry.getValue().toByteArray());
+        }
+
         return msg;
     }
 
-    /**
-     * @return the offset
-     */
+	private void setOffset(Long offset) {
+		this.offset = offset;
+	}
+
+    private void setKey(byte[] key) {
+		this.key = key;
+	}
+
+    private void setValue(byte[] value) {
+		this.value = value;
+	}
+
+    private void setTimestamp(Instant instant) {
+        this.timestamp = instant;
+	}
+
+    private void setSubject(String subject) {
+		this.subject = subject;
+	}
+
+    private void setReplySubject(String replySubject) {
+		this.replySubject = replySubject;
+	}
+
+    private void setStreamName(String streamName) {
+		this.streamName = streamName;
+	}
+
+    private void setPartition(int partition) {
+		this.partition = partition;
+	}
+
+	private void setCorrelationId(String correlationId) {
+		this.correlationId = correlationId;
+	}
+
     public Long getOffset() {
         return offset;
     }
 
-    /**
-     * @param offset the offset to set
-     */
-    private void setOffset(Long offset) {
-        this.offset = offset;
-    }
+	public byte[] getKey() {
+		return key;
+	}
 
-    /**
-     * @return the key
-     */
-    public byte[] getKey() {
-        return key;
-    }
-
-    /**
-     * @param key the key to set
-     */
-    private void setKey(byte[] key) {
-        this.key = key;
-    }
-
-    /**
-     * @return the value
-     */
     public byte[] getValue() {
-        return value;
-    }
+		return value;
+	}
 
-    /**
-     * @param value the value to set
-     */
-    private void setValue(byte[] value) {
-        this.value = value;
-    }
+    public Instant getTimestamp() {
+		return timestamp;
+	}
 
-    /**
-     * @return the timestampNanos
-     */
-    public Long getTimestampNanos() {
-        return timestampNanos;
-    }
-
-    /**
-     * @param timestampNanos the timestampNanos to set
-     */
-    private void setTimestampNanos(Long timestampNanos) {
-        this.timestampNanos = timestampNanos;
-    }
-
-    /**
-     * @return the subject
-     */
     public String getSubject() {
-        return subject;
-    }
+		return subject;
+	}
 
-    /**
-     * @param subject the subject to set
-     */
-    private void setSubject(String subject) {
-        this.subject = subject;
-    }
-
-    /**
-     * @return the replySubject
-     */
     public String getReplySubject() {
-        return replySubject;
-    }
+		return replySubject;
+	}
 
-    /**
-     * @param replySubject the replySubject to set
-     */
-    private void setReplySubject(String replySubject) {
-        this.replySubject = replySubject;
-    }
+    public Map<String, byte[]> getHeaders() {
+		return Collections.unmodifiableMap(headers);
+	}
 
-    /**
-     * @return the headers
-     */
-    public HashMap<String, byte[]> getHeaders() {
-        return headers;
-    }
+    private void putHeader(String key, byte[] value) {
+		this.headers.put(key, value);
+	}
 
-    /**
-     * @param headers the headers to set
-     */
-    private void setHeaders(HashMap<String, byte[]> headers) {
-        this.headers = headers;
-    }
+	public String getStreamName() {
+		return streamName;
+	}
+
+	public int getPartition() {
+		return partition;
+	}
+
+	public String getCorrelationId() {
+		return correlationId;
+	}
 }

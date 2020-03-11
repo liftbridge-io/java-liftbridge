@@ -4,7 +4,7 @@ jobs:
     docker:
       # specify the version you desire here
       - image: circleci/openjdk:8-jdk
-      - image: liftbridge/standalone-dev:7af5336bf0a0eb6fb06b72e28eb933570a21a9a2
+      - image: liftbridge/standalone-dev:498fd22384057e3bed1ca57cff326c25aa978921
 
     working_directory: ~/repo
 
@@ -15,6 +15,11 @@ jobs:
 
     steps:
       - checkout
+      - run:
+          name: "Fetch submodules"
+          command: |
+            git submodule init
+            git submodule update --remote
 
       # Download and cache dependencies
       - restore_cache:

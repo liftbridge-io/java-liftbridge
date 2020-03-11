@@ -13,7 +13,7 @@ public class BaseClientTest {
     private static final Integer SERVER_PORT = 9292;
 
     String streamName;
-    Client client;
+    ManagedChannelClient client;
 
     @Before
     public void setupStreamName() {
@@ -22,7 +22,8 @@ public class BaseClientTest {
 
     @Before
     public void setupClient() {
-        this.client = Client.Builder.create(SERVER_ADDRESS + ":" + SERVER_PORT).build();
+        this.client = ManagedChannelClient.Builder.create(
+            SERVER_ADDRESS + ":" + SERVER_PORT).build();
     }
 
     @After
