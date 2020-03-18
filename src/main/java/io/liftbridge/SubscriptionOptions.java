@@ -1,14 +1,19 @@
 package io.liftbridge;
 
 import io.liftbridge.proto.Api;
-import java.time.Instant;
 
+import java.time.Instant;
+import java.time.temporal.TemporalAmount;
+
+/**
+ *
+ */
 public class SubscriptionOptions {
+
     private int partition = 0;
-    private StartPosition startPosition = new StartAtEarliestReceived();
+    private StartPosition startPosition = new StartAtNewOnly();
 
     public SubscriptionOptions() {
-        this.setStartPosition(new StartAtNewOnly());
     }
 
     /**
@@ -23,78 +28,118 @@ public class SubscriptionOptions {
         return this.partition;
     }
 
-    public StartPosition getStartPosition() {
-        return this.startPosition;
-    }
-
-    public SubscriptionOptions setStartPosition(StartPosition position) {
-        this.startPosition = position;
+    /**
+     * Sets the subscription start position to the earliest message received in the stream.
+     *
+     * @return {@code this} to allow for chaining
+     */
+    public SubscriptionOptions startAtEarliestReceived() {
+        this.startPosition = new StartAtEarliestReceived();
         return this;
     }
 
-    Api.SubscribeRequest toWire(String streamName) {
+    /**
+     * Sets the subscription start position to the latest message received in the stream.
+     *
+     * @return {@code this} to allow for chaining
+     */
+    public SubscriptionOptions startAtLatestReceived() {
+        this.startPosition = new StartAtLatestReceived();
+        return this;
+    }
+
+    /**
+     * Sets the desired start offset to begin consuming from in the stream.
+     *
+     * @param offset offset to start consuming from
+     * @return {@code this} to allow for chaining
+     */
+    public SubscriptionOptions startAtOffset(long offset) {
+        this.startPosition = new StartAtOffset(offset);
+        return this;
+    }
+
+    /**
+     * Sets the desired timestamp to begin consuming from in the stream.
+     *
+     * @param instant timestamp to start consuming from
+     * @return {@code this} to allow for chaining
+     */
+    public SubscriptionOptions startAtTime(Instant instant) {
+        this.startPosition = new StartAtTime(instant);
+        return this;
+    }
+
+    /**
+     * Sets the desired timestamp to begin consuming from in the stream using a time delta in the past.
+     *
+     * @param delta amount of time in the past to start consuming from
+     * @return {@code this} to allow for chaining
+     */
+    public SubscriptionOptions startAtTimeDelta(TemporalAmount delta) {
+        this.startPosition = new StartAtTime(Instant.now().minus(delta));
+        return this;
+    }
+
+    Api.SubscribeRequest toProto(String streamName) {
         Api.SubscribeRequest.Builder requestBuilder =
-            Api.SubscribeRequest.newBuilder()
-            .setStream(streamName)
-            .setPartition(partition);
+                Api.SubscribeRequest.newBuilder()
+                        .setStream(streamName)
+                        .setPartition(partition);
         startPosition.setRequestBuilderParameters(requestBuilder);
 
         return requestBuilder.build();
     }
 
-    public abstract static class StartPosition {
-        abstract Api.SubscribeRequest.Builder setRequestBuilderParameters(
-            Api.SubscribeRequest.Builder builder);
+    abstract static class StartPosition {
+        abstract Api.SubscribeRequest.Builder setRequestBuilderParameters(Api.SubscribeRequest.Builder builder);
     }
 
-    public static class StartAtNewOnly extends StartPosition {
-        StartAtNewOnly() {}
-        Api.SubscribeRequest.Builder setRequestBuilderParameters(
-            Api.SubscribeRequest.Builder builder) {
+    static class StartAtNewOnly extends StartPosition {
+
+        StartAtNewOnly() {
+        }
+
+        Api.SubscribeRequest.Builder setRequestBuilderParameters(Api.SubscribeRequest.Builder builder) {
             return builder.setStartPosition(Api.StartPosition.NEW_ONLY);
         }
     }
 
-    public static class StartAtEarliestReceived extends StartPosition {
-        Api.SubscribeRequest.Builder setRequestBuilderParameters(
-            Api.SubscribeRequest.Builder builder) {
+    static class StartAtEarliestReceived extends StartPosition {
+        Api.SubscribeRequest.Builder setRequestBuilderParameters(Api.SubscribeRequest.Builder builder) {
             return builder.setStartPosition(Api.StartPosition.EARLIEST);
         }
     }
 
-    public static class StartAtLatestReceived extends StartPosition {
-        Api.SubscribeRequest.Builder setRequestBuilderParameters(
-            Api.SubscribeRequest.Builder builder) {
+    static class StartAtLatestReceived extends StartPosition {
+        Api.SubscribeRequest.Builder setRequestBuilderParameters(Api.SubscribeRequest.Builder builder) {
             return builder.setStartPosition(Api.StartPosition.LATEST);
         }
     }
 
-    public static class StartAtOffset extends StartPosition {
-        private Long offset;
+    static class StartAtOffset extends StartPosition {
 
-        StartAtOffset(Long offset) {
+        private final long offset;
+
+        StartAtOffset(long offset) {
             this.offset = offset;
         }
 
-        Api.SubscribeRequest.Builder setRequestBuilderParameters(
-            Api.SubscribeRequest.Builder builder) {
-            return builder
-                .setStartPosition(Api.StartPosition.OFFSET)
-                .setStartOffset(offset);
+        Api.SubscribeRequest.Builder setRequestBuilderParameters(Api.SubscribeRequest.Builder builder) {
+            return builder.setStartPosition(Api.StartPosition.OFFSET).setStartOffset(offset);
         }
     }
 
-    public static class StartAtInstant extends StartPosition {
-        private Instant instant;
+    static class StartAtTime extends StartPosition {
 
-        StartAtInstant(Instant instant) {
+        private final Instant instant;
+
+        StartAtTime(Instant instant) {
             this.instant = instant;
         }
 
-        Api.SubscribeRequest.Builder setRequestBuilderParameters(
-            Api.SubscribeRequest.Builder builder) {
-            return builder.setStartPosition(Api.StartPosition.TIMESTAMP)
-                .setStartTimestamp(
+        Api.SubscribeRequest.Builder setRequestBuilderParameters(Api.SubscribeRequest.Builder builder) {
+            return builder.setStartPosition(Api.StartPosition.TIMESTAMP).setStartTimestamp(
                     this.instant.getEpochSecond() * 1_000_000L + this.instant.getNano());
         }
     }

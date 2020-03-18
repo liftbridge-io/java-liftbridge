@@ -6,125 +6,129 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.time.Instant;
+
 import com.google.protobuf.ByteString;
 
+/**
+ * {@code Message} received from a Liftbridge stream.
+ */
 public class Message {
-    private Long offset;
+
+    private long offset;
     private byte[] key;
     private byte[] value;
     private int partition;
     private Instant timestamp;
-    private String streamName;
+    private String stream;
     private String subject;
     private String replySubject;
-    private HashMap<String, byte[]> headers = new HashMap<String, byte[]>();
-    private String correlationId;
+    private final HashMap<String, byte[]> headers = new HashMap<>();
 
     private Message() {
     }
 
-    static Message fromWire(Api.Message wireMsg) {
+    static Message fromProto(Api.Message wireMsg) {
         Message msg = new Message();
 
-        Long tsNanos = wireMsg.getTimestamp();
+        long tsNanos = wireMsg.getTimestamp();
 
-        msg.setOffset(wireMsg.getOffset());
-        msg.setKey(wireMsg.getKey().toByteArray());
-        msg.setValue(wireMsg.getValue().toByteArray());
-        msg.setTimestamp(Instant.ofEpochSecond(
-                             tsNanos / 1_000_000_000,
-                             tsNanos % 1_000_000_000));
-        msg.setStreamName(wireMsg.getStream());
-        msg.setPartition(wireMsg.getPartition());
-        msg.setSubject(wireMsg.getSubject());
-        msg.setReplySubject(wireMsg.getReplySubject());
-        msg.setCorrelationId(wireMsg.getCorrelationId());
+        msg.offset = wireMsg.getOffset();
+        msg.key = wireMsg.getKey().toByteArray();
+        msg.value = wireMsg.getValue().toByteArray();
+        msg.timestamp = Instant.ofEpochSecond(
+                tsNanos / 1_000_000_000,
+                tsNanos % 1_000_000_000);
+        msg.stream = wireMsg.getStream();
+        msg.partition = wireMsg.getPartition();
+        msg.subject = wireMsg.getSubject();
+        msg.replySubject = wireMsg.getReplySubject();
 
-        for (Map.Entry<String, ByteString> entry :
-                 wireMsg.getHeadersMap().entrySet()) {
-            msg.putHeader(entry.getKey(), entry.getValue().toByteArray());
+        for (Map.Entry<String, ByteString> entry : wireMsg.getHeadersMap().entrySet()) {
+            msg.headers.put(entry.getKey(), entry.getValue().toByteArray());
         }
 
         return msg;
     }
 
-	private void setOffset(Long offset) {
-		this.offset = offset;
-	}
-
-    private void setKey(byte[] key) {
-		this.key = key;
-	}
-
-    private void setValue(byte[] value) {
-		this.value = value;
-	}
-
-    private void setTimestamp(Instant instant) {
-        this.timestamp = instant;
-	}
-
-    private void setSubject(String subject) {
-		this.subject = subject;
-	}
-
-    private void setReplySubject(String replySubject) {
-		this.replySubject = replySubject;
-	}
-
-    private void setStreamName(String streamName) {
-		this.streamName = streamName;
-	}
-
-    private void setPartition(int partition) {
-		this.partition = partition;
-	}
-
-	private void setCorrelationId(String correlationId) {
-		this.correlationId = correlationId;
-	}
-
-    public Long getOffset() {
+    /**
+     * Returns the offset, which is a monotonic message sequence in the stream partition.
+     *
+     * @return message offset
+     */
+    public long getOffset() {
         return offset;
     }
 
-	public byte[] getKey() {
-		return key;
-	}
+    /**
+     * Returns the optional key set on the message, useful for partitioning and stream compaction.
+     *
+     * @return message key
+     */
+    public byte[] getKey() {
+        return key;
+    }
 
+    /**
+     * Returns the message payload.
+     *
+     * @return message payload
+     */
     public byte[] getValue() {
-		return value;
-	}
+        return value;
+    }
 
+    /**
+     * Returns the time the message was received by the server.
+     *
+     * @return message timestamp
+     */
     public Instant getTimestamp() {
-		return timestamp;
-	}
+        return timestamp;
+    }
 
+    /**
+     * Returns the NATS subject the message was received on
+     *
+     * @return message subject
+     */
     public String getSubject() {
-		return subject;
-	}
+        return subject;
+    }
 
+    /**
+     * Returns the NATS reply subject on the message, if any.
+     *
+     * @return message reply subject
+     */
     public String getReplySubject() {
-		return replySubject;
-	}
+        return replySubject;
+    }
 
+    /**
+     * Returns the message key-value headers.
+     *
+     * @return message headers
+     */
     public Map<String, byte[]> getHeaders() {
-		return Collections.unmodifiableMap(headers);
-	}
+        return Collections.unmodifiableMap(headers);
+    }
 
-    private void putHeader(String key, byte[] value) {
-		this.headers.put(key, value);
-	}
+    /**
+     * Returns the name of the stream the message was received on.
+     *
+     * @return message stream
+     */
+    public String getStream() {
+        return stream;
+    }
 
-	public String getStreamName() {
-		return streamName;
-	}
+    /**
+     * Returns the stream partition the message was received on.
+     *
+     * @return message stream partition
+     */
+    public int getPartition() {
+        return partition;
+    }
 
-	public int getPartition() {
-		return partition;
-	}
-
-	public String getCorrelationId() {
-		return correlationId;
-	}
 }

@@ -8,9 +8,10 @@ import java.util.ArrayList;
 import java.io.Closeable;
 
 /**
- * API Client that manages the gRPC channel for the user
+ * API {@link Client} that manages the gRPC channel for the user.
  */
 public class ManagedChannelClient extends Client implements Closeable {
+
     private ManagedChannel channel;
 
     private ManagedChannelClient(ManagedChannel channel) {
@@ -19,21 +20,21 @@ public class ManagedChannelClient extends Client implements Closeable {
     }
 
     /**
-     * Closes the client connection by shutting down the gRPC channel and
-     * releasing any resources.
+     * Closes the client connection by shutting down the gRPC channel and releasing any resources.
      */
     public void close() {
         channel.shutdown();
     }
 
     /**
-     * {@code Builder} is used to configure and construct a {@link Client}
-     * instance.
+     * {@code Builder} is used to configure and construct a {@link Client} instance.
      */
     public static class Builder {
+
         private final List<String> addrs = new ArrayList<>();
 
-        private Builder() {}
+        private Builder() {
+        }
 
         /**
          * Creates a {@link Builder} that will connect to the given broker
@@ -70,8 +71,8 @@ public class ManagedChannelClient extends Client implements Closeable {
             }
 
             // TODO: Handle multiple addresses.
-            ManagedChannelBuilder channelBuilder =
-                ManagedChannelBuilder.forTarget(addrs.get(0));
+            ManagedChannelBuilder<?> channelBuilder =
+                    ManagedChannelBuilder.forTarget(addrs.get(0));
 
             // TODO: Implement TLS.
             ManagedChannel channel = channelBuilder.usePlaintext().build();

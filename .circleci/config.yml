@@ -4,7 +4,7 @@ jobs:
     docker:
       # specify the version you desire here
       - image: circleci/openjdk:8-jdk
-      - image: liftbridge/standalone-dev:498fd22384057e3bed1ca57cff326c25aa978921
+      - image: liftbridge/standalone-dev:62544c84977c30794caa0c1e3af22286b82fba93
 
     working_directory: ~/repo
 
