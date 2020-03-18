@@ -1,4 +1,4 @@
-# java-liftbridge [![CircleCI](https://circleci.com/gh/caioaao/java-liftbridge/tree/master.svg?style=svg)](https://circleci.com/gh/caioaao/java-liftbridge/tree/master)
+# java-liftbridge [![CircleCI](https://circleci.com/gh/liftbridge-io/java-liftbridge.svg?style=svg)](https://circleci.com/gh/liftbridge-io/java-liftbridge)
 
 **This project is under development**
 
@@ -21,7 +21,7 @@ This project is under active development and changing rapidly. For basic usage, 
 To run the tests, first start the standalone dev image:
 
 ```
-$ docker run -t -p 4222:4222 -p 9292:9292 -p 8222:8222 -p 6222:6222 liftbridge/standalone-dev:498fd22384057e3bed1ca57cff326c25aa978921
+$ docker run -t -p 4222:4222 -p 9292:9292 -p 8222:8222 -p 6222:6222 liftbridge/standalone-dev:latest
 ```
 
 Then, go to the project's root dir and run `./gradlew test`.
@@ -31,7 +31,7 @@ Then, go to the project's root dir and run `./gradlew test`.
 - [X] Create Streams
 - [X] Subscribe to stream / subject
 - [X] Publish to stream
-- [ ] Publish to subject API
+- [X] Publish to subject API
 - [ ] Metadata API
 - [ ] Subscribe to partition leader
 - [ ] Partitioner by key
