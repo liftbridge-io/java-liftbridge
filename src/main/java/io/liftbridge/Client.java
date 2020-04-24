@@ -1,19 +1,18 @@
 package io.liftbridge;
 
+import com.google.protobuf.ByteString;
 import io.grpc.Context;
 import io.grpc.ManagedChannel;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
-import io.liftbridge.exceptions.DeadlineExceededException;
-import io.liftbridge.exceptions.NoSuchPartitionException;
-import io.liftbridge.exceptions.NoSuchStreamException;
-import io.liftbridge.exceptions.StreamExistsException;
+import io.liftbridge.exceptions.*;
 import io.liftbridge.proto.APIGrpc;
 import io.liftbridge.proto.APIGrpc.APIBlockingStub;
 import io.liftbridge.proto.APIGrpc.APIStub;
 import io.liftbridge.proto.Api;
 
+import java.util.Map;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -120,11 +119,18 @@ public class Client {
                             }
                         }
 
-                        // Subscription cancellation shouldn't cause an error callback.
                         if (t instanceof StatusRuntimeException) {
                             StatusRuntimeException e = (StatusRuntimeException) t;
-                            if (e.getStatus().getCode() == Status.Code.CANCELLED) {
-                                return;
+                            switch (e.getStatus().getCode()) {
+                                case CANCELLED:
+                                    // Subscription cancellation shouldn't cause an error callback.
+                                    return;
+                                case NOT_FOUND:
+                                    // Indicates the stream was deleted.
+                                    t = new StreamDeletedException("stream was deleted", e);
+                                case FAILED_PRECONDITION:
+                                    // Indicates the partition was paused.
+                                    t = new PartitionPausedException("partition was paused", e);
                             }
                         }
                         msgHandler.onError(t);
@@ -172,8 +178,56 @@ public class Client {
      * @throws DeadlineExceededException when the configured deadline was exceeded
      */
     public Ack publish(String stream, byte[] payload, MessageOptions opts) throws DeadlineExceededException {
-        Api.PublishRequest request = PublishRequest.buildForStream(stream, payload, opts);
-        return publish(request, opts.getAckDeadlineDuration(), opts.getAckDeadlineTimeUnit());
+        Integer partition = opts.getPartition();
+        if (partition == null) {
+            partition = opts.getPartitioner().partition(stream, opts.getKey(), payload, opts);
+        }
+
+        Api.PublishRequest.Builder requestBuilder = Api.PublishRequest.newBuilder()
+                .setStream(stream)
+                .setPartition(partition)
+                .setAckPolicy(opts.getAckPolicy().toProto());
+        if (payload != null) {
+            requestBuilder.setValue(ByteString.copyFrom(payload));
+        }
+        if (opts.getAckInbox() != null) {
+            requestBuilder.setAckInbox(opts.getAckInbox());
+        }
+        if (opts.getCorrelationId() != null) {
+            requestBuilder.setCorrelationId(opts.getCorrelationId());
+        }
+
+        byte[] msgKey = opts.getKey();
+        if (msgKey != null) {
+            requestBuilder.setKey(ByteString.copyFrom(msgKey));
+        }
+
+        Map<String, byte[]> headers = opts.getHeaders();
+        if (headers != null) {
+            for (Map.Entry<String, byte[]> header : headers.entrySet()) {
+                requestBuilder.putHeaders(
+                        header.getKey(), ByteString.copyFrom(header.getValue()));
+            }
+        }
+
+        APIBlockingStub stub = blockingStub;
+        if (opts.getAckDeadlineDuration() > 0) {
+            stub = stub.withDeadlineAfter(opts.getAckDeadlineDuration(), opts.getAckDeadlineTimeUnit());
+        }
+
+        Api.PublishResponse resp;
+        try {
+            resp = stub.publish(requestBuilder.build());
+        } catch (StatusRuntimeException e) {
+            if (e.getStatus().getCode() == Status.Code.DEADLINE_EXCEEDED) {
+                throw new DeadlineExceededException(e);
+            }
+            throw e;
+        }
+        if (!resp.hasAck()) {
+            return null;
+        }
+        return Ack.fromProto(resp.getAck());
     }
 
     /**
@@ -193,8 +247,50 @@ public class Client {
      * @throws DeadlineExceededException when the configured deadline was exceeded
      */
     public Ack publishToSubject(String subject, byte[] payload, MessageOptions opts) throws DeadlineExceededException {
-        Api.PublishRequest request = PublishRequest.buildForSubject(subject, payload, opts);
-        return publish(request, opts.getAckDeadlineDuration(), opts.getAckDeadlineTimeUnit());
+        Api.PublishToSubjectRequest.Builder requestBuilder = Api.PublishToSubjectRequest.newBuilder()
+                .setSubject(subject)
+                .setAckPolicy(opts.getAckPolicy().toProto());
+        if (payload != null) {
+            requestBuilder.setValue(ByteString.copyFrom(payload));
+        }
+        if (opts.getAckInbox() != null) {
+            requestBuilder.setAckInbox(opts.getAckInbox());
+        }
+        if (opts.getCorrelationId() != null) {
+            requestBuilder.setCorrelationId(opts.getCorrelationId());
+        }
+
+        byte[] msgKey = opts.getKey();
+        if (msgKey != null) {
+            requestBuilder.setKey(ByteString.copyFrom(msgKey));
+        }
+
+        Map<String, byte[]> headers = opts.getHeaders();
+        if (headers != null) {
+            for (Map.Entry<String, byte[]> header : headers.entrySet()) {
+                requestBuilder.putHeaders(
+                        header.getKey(), ByteString.copyFrom(header.getValue()));
+            }
+        }
+
+        APIBlockingStub stub = blockingStub;
+        if (opts.getAckDeadlineDuration() > 0) {
+            stub = stub.withDeadlineAfter(opts.getAckDeadlineDuration(), opts.getAckDeadlineTimeUnit());
+        }
+
+        Api.PublishToSubjectResponse resp;
+        try {
+            resp = stub.publishToSubject(requestBuilder.build());
+        } catch (StatusRuntimeException e) {
+            if (e.getStatus().getCode() == Status.Code.DEADLINE_EXCEEDED) {
+                throw new DeadlineExceededException(e);
+            }
+            throw e;
+        }
+        if (!resp.hasAck()) {
+            return null;
+        }
+        return Ack.fromProto(resp.getAck());
     }
 
     private Ack publish(Api.PublishRequest req, long deadlineDuration, TimeUnit deadlineTimeUnit)
