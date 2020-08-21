@@ -9,4 +9,8 @@ public class NoSuchPartitionException extends LiftbridgeException {
         super(cause);
     }
 
+    public NoSuchPartitionException(String msg) {
+        super(new Exception(msg));
+    }
+
 }

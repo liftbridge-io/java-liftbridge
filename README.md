@@ -32,8 +32,8 @@ Then, go to the project's root dir and run `./gradlew test`.
 - [X] Subscribe to stream / subject
 - [X] Publish to stream
 - [X] Publish to subject API
-- [ ] Metadata API
-- [ ] Subscribe to partition leader
+- [X] Metadata API
+- [X] Subscribe to partition leader
 - [ ] Partitioner by key
 - [ ] Round-robin partitioner
 

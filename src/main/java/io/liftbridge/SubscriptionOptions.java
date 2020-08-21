@@ -12,6 +12,7 @@ public class SubscriptionOptions {
 
     private int partition = 0;
     private StartPosition startPosition = new StartAtNewOnly();
+    private boolean readIsrReplica;
 
     public SubscriptionOptions() {
     }
@@ -89,6 +90,19 @@ public class SubscriptionOptions {
         startPosition.setRequestBuilderParameters(requestBuilder);
 
         return requestBuilder.build();
+    }
+
+    public boolean getReadIsrReplica() {
+        return readIsrReplica;
+    }
+
+    /**
+     * Sets the read replica option. If enabled, the client will subscribe from a random ISR replica instead of
+     * subscribing explicitly to the partition leader. As a random ISR replica is given, it may well be the partition
+     * leader itself.
+     */
+    public void readIsrReplica() {
+        this.readIsrReplica = true;
     }
 
     abstract static class StartPosition {
