@@ -67,6 +67,7 @@ dependencies {
     testImplementation "io.grpc:grpc-netty:1.26.0"
     testImplementation "org.apache.commons:commons-lang3:3.9"
     testImplementation "org.awaitility:awaitility:4.0.1"
+    testImplementation "org.mockito:mockito-core:2.+"
 
     protobuf files("liftbridge-api/")
 }

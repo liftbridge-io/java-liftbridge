@@ -1,66 +1,72 @@
 package io.liftbridge;
 
-import io.liftbridge.exceptions.DeadlineExceededException;
+import io.grpc.StatusRuntimeException;
+import io.grpc.stub.StreamObserver;
 import io.liftbridge.exceptions.NoSuchPartitionException;
-import io.liftbridge.exceptions.NoSuchStreamException;
-import io.liftbridge.exceptions.StreamExistsException;
+import io.liftbridge.proto.Api;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import static java.util.concurrent.TimeUnit.*;
+import static org.awaitility.Awaitility.await;
+import static org.junit.Assert.*;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static java.util.concurrent.TimeUnit.*;
-import static org.awaitility.Awaitility.await;
-import static org.junit.Assert.*;
-
-public class ClientPublishTest extends BaseClientTest {
+public class APIClientPublishTest extends BaseAPIClientTest {
 
     private static final String CORRELATION_ID = "abc123";
 
     @Before
-    public void setupStreams() throws StreamExistsException {
+    public void setupStreams() {
         StreamOptions opts = new StreamOptions().setSubject("foo.*");
         client.createStream(streamName, opts);
     }
 
     @After
-    public void teardownStreams() throws NoSuchStreamException {
+    public void teardownStreams() {
         client.deleteStream(streamName);
     }
 
-    @Test(expected = DeadlineExceededException.class)
-    public void testPublishDeadlineExceeded() throws DeadlineExceededException {
+    @Test(expected = StatusRuntimeException.class)
+    public void testPublishDeadlineExceeded() {
         MessageOptions msgOpts = new MessageOptions().setAckDeadline(1, NANOSECONDS);
         client.publish(streamName, null, msgOpts);
     }
 
     @Test
-    public void testPublishToSubject() throws NoSuchPartitionException, DeadlineExceededException {
+    public void testPublishToSubject() throws NoSuchPartitionException {
         MessageOptions msgOpts = new MessageOptions()
                 .setAckDeadline(100, MILLISECONDS)
                 .setCorrelationId(CORRELATION_ID);
         for (int i = 0; i < 5; i++) {
             byte[] payload = ByteBuffer.allocate(4).putInt(i).array();
-            Ack ack = client.publishToSubject(String.format("foo.%d", i), payload, msgOpts);
+            Api.PublishToSubjectResponse resp = client.publishToSubject(String.format("foo.%d", i), payload, msgOpts);
+            Api.Ack ack = resp.getAck();
             assertEquals("Received expected ack", CORRELATION_ID, ack.getCorrelationId());
         }
 
         SubscriptionOptions subOpts = new SubscriptionOptions().startAtEarliestReceived();
         final List<Integer> streamValues = new ArrayList<>();
 
-        Subscription sub = client.subscribe(streamName, subOpts, new MessageHandler() {
+        Subscription sub = client.subscribe(streamName, subOpts, new StreamObserver<Api.Message>() {
             @Override
-            public void onMessage(Message msg) {
-                streamValues.add(ByteBuffer.wrap(msg.getValue()).getInt());
+            public void onNext(Api.Message value) {
+                streamValues.add(ByteBuffer.wrap(Message.fromProto(value).getValue()).getInt());
             }
 
             @Override
             public void onError(Throwable t) {
                 fail(t.getMessage());
+            }
+
+            @Override
+            public void onCompleted() {
+
             }
         });
 
@@ -75,17 +81,17 @@ public class ClientPublishTest extends BaseClientTest {
     }
 
     @Test
-    public void testPublishNoAck() throws DeadlineExceededException {
+    public void testPublishNoAck() {
         // No ack when deadline is not set.
-        Ack ack = client.publish(streamName, null, new MessageOptions());
-        assertNull(ack);
+        Api.PublishResponse resp = client.publish(streamName, null, new MessageOptions());
+        assertFalse("Ack is null", resp.hasAck());
 
         // No ack when AckPolicy is NONE.
         MessageOptions opts = new MessageOptions()
                 .setAckDeadline(100, MILLISECONDS)
                 .setAckPolicy(MessageOptions.AckPolicy.NONE);
-        ack = client.publish(streamName, null, opts);
-        assertNull(ack);
+        resp = client.publish(streamName, null, opts);
+        assertFalse("Ack is null", resp.hasAck());
     }
 
 }
